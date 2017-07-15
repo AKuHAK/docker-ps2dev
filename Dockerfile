@@ -22,6 +22,5 @@ RUN git clone https://github.com/ps2dev/ps2toolchain /ps2toolchain \
     && ./toolchain.sh 4 \
     && rm -rf /ps2toolchain/build/*
 
-ENV GSKIT $PS2DEV/gsKit
 WORKDIR /src
 CMD ["/bin/bash"]
