@@ -14,11 +14,11 @@ ENV PATH   $PATH:$PS2DEV/bin:$PS2DEV/ee/bin:$PS2DEV/iop/bin:$PS2DEV/dvp/bin:$PS2
 RUN git clone https://github.com/ps2dev/ps2toolchain /ps2toolchain \
     && cd /ps2toolchain \
     && ./toolchain.sh 1 \
-    && rm -rf /ps2toolchain/build/*
+    && rm -rf /ps2toolchain/build/* \
     && ./toolchain.sh 2 \
-    && rm -rf /ps2toolchain/build/*
+    && rm -rf /ps2toolchain/build/* \
     && ./toolchain.sh 3 \
-    && rm -rf /ps2toolchain/build/*
+    && rm -rf /ps2toolchain/build/* \
     && ./toolchain.sh 4 \
     && rm -rf /ps2toolchain/build/*
 
