@@ -13,8 +13,8 @@ ENV PS2DEV /ps2dev_new
 ENV PS2SDK $PS2DEV/ps2sdk
 ENV PATH   $PATH:$PS2DEV/bin:$PS2DEV/ee/bin:$PS2DEV/iop/bin:$PS2DEV/dvp/bin:$PS2SDK/bin
 
-RUN git clone https://github.com/akuhak/ps2toolchain /ps2toolchain \
-    && cd /ps2toolchain && git checkout new_gcc \
+RUN git clone https://github.com/uyjulian/ps2toolchain /ps2toolchain \
+    && cd /ps2toolchain && git checkout uyjworking \
     && ./toolchain.sh 1 \
     && rm -rf /ps2toolchain/build/* \
     && ./toolchain.sh 2 \
