@@ -7,7 +7,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-get upgrade -y \
     && apt-get install -y autoconf bzip2 gcc git make patch vim wget zip zlib1g zlib1g-dev libucl1 libucl-dev
 RUN export DEBIAN_FRONTEND="noninteractive" \
-    && apt-get install -y g++ texinfo libmpc-dev diffutils
+    && apt-get install -y g++ texinfo libmpc-dev libgmp-dev diffutils
 
 ENV PS2DEV /ps2dev_new
 ENV PS2SDK $PS2DEV/ps2sdk
