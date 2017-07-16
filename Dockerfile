@@ -22,6 +22,8 @@ RUN git clone https://github.com/uyjulian/ps2toolchain /ps2toolchain \
     && ./toolchain.sh 3 \
     && rm -rf /ps2toolchain/build/* \
     && ./toolchain.sh 4 \
+    && rm -rf /ps2toolchain/build/* \
+    && ./toolchain.sh 5 \
     && rm -rf /ps2toolchain/build/*
 
 WORKDIR /src
