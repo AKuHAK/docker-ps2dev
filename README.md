@@ -11,7 +11,7 @@ Run this command in your project's root folder to build it inside a Docker
 container:
 
 ```bash
-docker run -it --rm -v "$PWD:/src" ps2dev make
+docker run -it --rm -v "$PWD:/src" akuhak/docker-ps2dev make
 ```
 
 This will mount the current folder to `/src` in the container and then run
@@ -20,7 +20,7 @@ This will mount the current folder to `/src` in the container and then run
 Omit the command to get a login shell (`/bin/bash`) in the running container:
 
 ```bash
-docker run -it --rm -v "$PWD:/src" ps2dev
+docker run -it --rm -v "$PWD:/src" akuhak/docker-ps2dev
 ```
 
 ## Continuous Integration
@@ -37,7 +37,7 @@ sudo: required
 services:
   - docker
 
-script: docker run -it --rm -v "$PWD:/src" ps2dev make test
+script: docker run -it --rm -v "$PWD:/src" akuhak/docker-ps2dev make test
 ```
 
 ## Author
