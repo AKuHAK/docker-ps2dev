@@ -1,7 +1,6 @@
 # A Docker Image for PS2 Development
 
-[![](https://images.microbadger.com/badges/image/mlafeldt/ps2dev.svg)](https://microbadger.com/images/mlafeldt/ps2dev)
-[![](https://img.shields.io/docker/pulls/mlafeldt/ps2dev.svg?maxAge=604800)](https://hub.docker.com/r/mlafeldt/ps2dev/)
+[![](https://img.shields.io/docker/pulls/akuhak/docker-ps2dev.svg)](https://hub.docker.com/r/akuhak/docker-ps2dev/)
 
 Cross-compile your PS2 homebrew projects inside a Docker container based on
 [ps2toolchain](https://github.com/ps2dev/ps2toolchain).
@@ -12,7 +11,7 @@ Run this command in your project's root folder to build it inside a Docker
 container:
 
 ```bash
-docker run -it --rm -v "$PWD:/src" mlafeldt/ps2dev make
+docker run -it --rm -v "$PWD:/src" ps2dev make
 ```
 
 This will mount the current folder to `/src` in the container and then run
@@ -21,11 +20,8 @@ This will mount the current folder to `/src` in the container and then run
 Omit the command to get a login shell (`/bin/bash`) in the running container:
 
 ```bash
-docker run -it --rm -v "$PWD:/src" mlafeldt/ps2dev
+docker run -it --rm -v "$PWD:/src" ps2dev
 ```
-
-There's also a "2011" tag, i.e. `mlafeldt/ps2dev:2011`, for projects depending
-on a PS2SDK version from that year.
 
 ## Continuous Integration
 
@@ -41,11 +37,10 @@ sudo: required
 services:
   - docker
 
-script: docker run -it --rm -v "$PWD:/src" mlafeldt/ps2dev make test
+script: docker run -it --rm -v "$PWD:/src" ps2dev make test
 ```
 
 ## Author
 
 This project is being developed by [Mathias Lafeldt](https://twitter.com/mlafeldt).
-
-Some years ago I already created a [Vagrant Box for PS2 development](https://mlafeldt.github.io/blog/building-a-vagrant-box-for-ps2-development/).
+And heavily modified by [AKuHAK]
