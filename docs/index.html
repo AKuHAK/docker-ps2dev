@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NVRAM Uploader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 </head>
-
 <body>
     <h1>NVRAM Uploader</h1>
     <form id="nvramForm">
-        <label for="serialNumber">Enter 7-digit Serial Number:</label>
-        <input type="text" id="serialNumber" name="serialNumber" pattern="\d{7}" required>
+        <label for="barcodeImage">Upload Barcode Image:</label>
+        <input type="file" id="barcodeImage" name="barcodeImage" accept="image/*" required>
         <br><br>
         <label for="nvramFile">Upload NVRAM File (1024 bytes):</label>
         <input type="file" id="nvramFile" name="nvramFile" accept=".bin" required>
@@ -22,45 +21,70 @@
     <a id="downloadLink" style="display:none">Download Modified NVRAM</a>
 
     <script>
-        document.getElementById('nvramForm').addEventListener('submit', function (event) {
+        document.getElementById('nvramForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const serialNumber = document.getElementById('serialNumber').value;
             const fileInput = document.getElementById('nvramFile');
-            const file = fileInput.files[0];
+            const barcodeInput = document.getElementById('barcodeImage');
+            const nvramFile = fileInput.files[0];
+            const barcodeFile = barcodeInput.files[0];
 
-            if (file.size !== 1024) {
+            if (nvramFile.size !== 1024) {
                 alert('The NVRAM file must be exactly 1024 bytes.');
                 return;
             }
 
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = function(e) {
                 const buffer = new Uint8Array(e.target.result);
-                const hexSerial = parseInt(serialNumber).toString(16).padStart(6, '0');
-                buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
-                buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
-                buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
 
-                buffer[0x1F8] = 0;
-                buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
+                const barcodeReader = new FileReader();
+                barcodeReader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        Quagga.decodeSingle({
+                            src: img.src,
+                            numOfWorkers: 0,
+                            inputStream: {
+                                size: 800  // restrict input-size to be 800px in width (long-side)
+                            },
+                            decoder: {
+                                readers: ["code_128_reader"] // List of active readers
+                            },
+                        }, function(result) {
+                            if (result && result.codeResult) {
+                                const barcode = result.codeResult.code;
+                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
+                                buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
+                                buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
+                                buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
+                
+                                buffer[0x1F8] = 0;
+                                buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
+                
+                                buffer[0x1E6] = 0xFF - buffer[0x1F6];
+                                buffer[0x1E5] = 0xFF - buffer[0x1F5];
+                                buffer[0x1E4] = 0xFF - buffer[0x1F4];
+                
+                                buffer[0x1E8] = 0;
+                                buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
 
-                buffer[0x1E6] = 0xFF - buffer[0x1F6];
-                buffer[0x1E5] = 0xFF - buffer[0x1F5];
-                buffer[0x1E4] = 0xFF - buffer[0x1F4];
-
-                buffer[0x1E8] = 0;
-                buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
-
-                const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
-                const downloadLink = document.getElementById('downloadLink');
-                downloadLink.href = URL.createObjectURL(modifiedBlob);
-                downloadLink.download = 'modified_nvram.bin';
-                downloadLink.style.display = 'block';
-                downloadLink.textContent = 'Download Modified NVRAM';
+                                const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                                const downloadLink = document.getElementById('downloadLink');
+                                downloadLink.href = URL.createObjectURL(modifiedBlob);
+                                downloadLink.download = 'modified_nvram.bin';
+                                downloadLink.style.display = 'block';
+                                downloadLink.textContent = 'Download Modified NVRAM';
+                            } else {
+                                alert('Barcode not recognized. Please try another image.');
+                            }
+                        });
+                    };
+                };
+                barcodeReader.readAsDataURL(barcodeFile);
             };
-            reader.readAsArrayBuffer(file);
+            reader.readAsArrayBuffer(nvramFile);
         });
     </script>
 </body>
-
 </html>
