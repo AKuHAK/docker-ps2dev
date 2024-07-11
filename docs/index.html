@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NVRAM Uploader</title>
 </head>
+
 <body>
     <h1>NVRAM Uploader</h1>
     <form id="nvramForm">
@@ -20,7 +22,7 @@
     <a id="downloadLink" style="display:none">Download Modified NVRAM</a>
 
     <script>
-        document.getElementById('nvramForm').addEventListener('submit', function(event) {
+        document.getElementById('nvramForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const serialNumber = document.getElementById('serialNumber').value;
             const fileInput = document.getElementById('nvramFile');
@@ -32,12 +34,22 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const buffer = new Uint8Array(e.target.result);
                 const hexSerial = parseInt(serialNumber).toString(16).padStart(6, '0');
-                buffer[0] = parseInt(hexSerial.substring(0, 2), 16);
-                buffer[1] = parseInt(hexSerial.substring(2, 4), 16);
-                buffer[2] = parseInt(hexSerial.substring(4, 6), 16);
+                buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
+                buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
+                buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
+
+                buffer[0x1F8] = 0;
+                buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F4]) & 0xFF);
+
+                buffer[0x1E6] = 0xFF - buffer[0x1F6];
+                buffer[0x1E5] = 0xFF - buffer[0x1F5];
+                buffer[0x1E4] = 0xFF - buffer[0x1F4];
+
+                buffer[0x1E8] = 0;
+                buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E4]) & 0xFF);
 
                 const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
                 const downloadLink = document.getElementById('downloadLink');
@@ -50,4 +62,5 @@
         });
     </script>
 </body>
+
 </html>
