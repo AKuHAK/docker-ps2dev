@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NVRAM Uploader</title>
+</head>
+<body>
+    <h1>NVRAM Uploader</h1>
+    <form id="nvramForm">
+        <label for="serialNumber">Enter 7-digit Serial Number:</label>
+        <input type="text" id="serialNumber" name="serialNumber" pattern="\d{7}" required>
+        <br><br>
+        <label for="nvramFile">Upload NVRAM File (1024 bytes):</label>
+        <input type="file" id="nvramFile" name="nvramFile" accept=".bin" required>
+        <br><br>
+        <button type="submit">Upload and Modify</button>
+    </form>
+    <br>
+    <a id="downloadLink" style="display:none">Download Modified NVRAM</a>
+
+    <script>
+        document.getElementById('nvramForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const serialNumber = document.getElementById('serialNumber').value;
+            const fileInput = document.getElementById('nvramFile');
+            const file = fileInput.files[0];
+
+            if (file.size !== 1024) {
+                alert('The NVRAM file must be exactly 1024 bytes.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const buffer = new Uint8Array(e.target.result);
+                const hexSerial = parseInt(serialNumber).toString(16).padStart(6, '0');
+                buffer[0] = parseInt(hexSerial.substring(0, 2), 16);
+                buffer[1] = parseInt(hexSerial.substring(2, 4), 16);
+                buffer[2] = parseInt(hexSerial.substring(4, 6), 16);
+
+                const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = URL.createObjectURL(modifiedBlob);
+                downloadLink.download = 'modified_nvram.bin';
+                downloadLink.style.display = 'block';
+                downloadLink.textContent = 'Download Modified NVRAM';
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
+</body>
+</html>
