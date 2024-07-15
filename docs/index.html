@@ -65,7 +65,7 @@
                                     unknownId = parseInt(barcode.substring(2, 10), 10);
                                     unknownId2 = 0;
                                 } else if (barcode.length === 11) {
-                                    hexSerial = parseInt(barcode.substring(3, 10)).toString(16).padStart(6, '0');
+                                    hexSerial = parseInt(barcode.substring(3, 10), 10).toString(16).padStart(6, '0');
                                     emcsId = 0;
                                     unknownId = 0;
                                     unknownId2 = barcode.substring(0, 3);
@@ -73,31 +73,80 @@
                                     alert('Invalid barcode length.');
                                     return;
                                 }
+
                                 console.log('EMCS ID:', emcsId);
                                 console.log('Unknown ID:', unknownId);
+                                console.log('Unknown ID2:', unknownId2);
                                 console.log('Hex Serial:', parseInt(hexSerial, 16));
-                                buffer[0x1F7] = emcsId;
-                                buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
-                                buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
-                                buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
 
-                                buffer[0x1F8] = 0;
-                                buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
+                                // Fetch and process CSV file
+                                const csvFilePath = 'your_csv_file.csv';
+                                fetch(csvFilePath)
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error('Failed to fetch CSV file.');
+                                        }
+                                        return response.text();
+                                    })
+                                    .then(csvData => {
+                                        const lines = csvData.trim().split('\n');
+                                        const csvMap = new Map();
 
-                                buffer[0x1E0] = emcsId;
-                                buffer[0x1E6] = buffer[0x1F6] & 0xFF;
-                                buffer[0x1E5] = buffer[0x1F5] & 0xFF;
-                                buffer[0x1E4] = buffer[0x1F4] & 0xFF;
+                                        lines.forEach(line => {
+                                            const [csvUnknownId, csvModelId] = line.split(',');
+                                            csvMap.set(parseInt(csvUnknownId.trim(), 10), csvModelId.trim());
+                                        });
 
-                                buffer[0x1E8] = 0;
-                                buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
+                                        // Assign modelId based on unknownId
+                                        if (barcode.length === 17) {
+                                            modelId = csvMap.has(unknownId) ? csvMap.get(unknownId) : 'Unknown';
+                                        } else if (barcode.length === 11) {
+                                            modelId = csvMap.has(parseInt(unknownId2, 10)) ? csvMap.get(parseInt(unknownId2, 10)) : 'Unknown';
+                                        } else{
+                                            alert('Barcode length is not 17 or 11.');
+                                            throw new Error('Barcode length is not 17 or 11.');
+                                            return;
+                                        }
 
-                                const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
-                                const downloadLink = document.getElementById('downloadLink');
-                                downloadLink.href = URL.createObjectURL(modifiedBlob);
-                                downloadLink.download = `nvm_${barcode}.bin`;
-                                downloadLink.style.display = 'block';
-                                downloadLink.textContent = 'Download Modified NVRAM';
+                                        // Check if modelId was found
+                                        if (modelId === 'csvModelId') {
+                                            alert('Unknown model, please contact support.');
+                                            throw new Error('Unknown model, please contact support.'); // Use throw to exit the function with an error
+                                            return;
+                                        }
+
+                                        // Log Model ID
+                                        console.log('Model ID:', modelId);
+
+                                        // Modify buffer and create download link
+                                        buffer[0x1F7] = emcsId;
+                                        buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
+                                        buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
+                                        buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
+
+                                        buffer[0x1F8] = 0;
+                                        buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
+
+                                        buffer[0x1E0] = emcsId;
+                                        buffer[0x1E6] = buffer[0x1F6] & 0xFF;
+                                        buffer[0x1E5] = buffer[0x1F5] & 0xFF;
+                                        buffer[0x1E4] = buffer[0x1F4] & 0xFF;
+
+                                        buffer[0x1E8] = 0;
+                                        buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
+
+                                        const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                                        const downloadLink = document.getElementById('downloadLink');
+                                        downloadLink.href = URL.createObjectURL(modifiedBlob);
+                                        downloadLink.download = `nvm_${barcode}.bin`;
+                                        downloadLink.style.display = 'block';
+                                        downloadLink.textContent = 'Download Modified NVRAM';
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error.message);
+                                        // Handle the error accordingly (e.g., show an alert, log, etc.)
+                                        // You can decide what to do in case of CSV fetch failure
+                                    });
                             } else {
                                 alert('Barcode not recognized. Please try another image.');
                             }
@@ -109,6 +158,7 @@
             reader.readAsArrayBuffer(nvramFile);
         });
     </script>
+
 </body>
 
 </html>
