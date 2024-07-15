@@ -66,7 +66,7 @@
                                     unknownId2 = 0;
                                 } else if (barcode.length === 11) {
                                     hexSerial = parseInt(barcode.substring(3, 10), 10).toString(16).padStart(6, '0');
-                                    emcsId = 0;
+                                    emcsId = buffer[0x1F7]; // workaround as for US models EMCS ID isnt stored in barcode, only in the corner of image as FOXC mark
                                     unknownId = 0;
                                     unknownId2 = barcode.substring(0, 3);
                                 } else {
@@ -94,24 +94,28 @@
 
                                         lines.forEach(line => {
                                             const [csvUnknownId, csvModelId] = line.split(',');
-                                            csvMap.set(parseInt(csvUnknownId.trim(), 10), csvModelId.trim());
+                                            csvMap.set(csvUnknownId.trim(), csvModelId.trim());
                                         });
 
                                         // Assign modelId based on unknownId
                                         if (barcode.length === 17) {
-                                            modelId = csvMap.has(unknownId) ? csvMap.get(unknownId) : 'Unknown';
+                                            modelId = csvMap.has(unknownId.toString()) ? csvMap.get(unknownId.toString()) : 'Unknown';
                                         } else if (barcode.length === 11) {
-                                            modelId = csvMap.has(parseInt(unknownId2, 10)) ? csvMap.get(parseInt(unknownId2, 10)) : 'Unknown';
-                                        } else{
-                                            alert('Barcode length is not 17 or 11.');
-                                            throw new Error('Barcode length is not 17 or 11.');
-                                            return;
+                                            console.log("Unknown ID2:", unknownId2);
+                                            modelId = csvMap.has(unknownId2) ? csvMap.get(unknownId2) : 'Unknown';
                                         }
+                                        console.log('CSV Map:', csvMap);
 
                                         // Check if modelId was found
                                         if (modelId === 'csvModelId') {
-                                            alert('Unknown model, please contact support.');
-                                            throw new Error('Unknown model, please contact support.'); // Use throw to exit the function with an error
+                                            alert('Unknown model, please contact developers.');
+                                            throw new Error('Unknown model, please contact developers.'); // Use throw to exit the function with an error
+                                            return;
+                                        }
+
+                                        if (modelId === 'Unknown') {
+                                            alert('Unknown model, please contact developers.');
+                                            throw new Error('Unknown model, please contact developers.'); // Use throw to exit the function with an error
                                             return;
                                         }
 
@@ -119,6 +123,10 @@
                                         console.log('Model ID:', modelId);
 
                                         // Modify buffer and create download link
+                                        buffer[0x1F0] = parseInt(modelId.substring(2, 4), 16);
+                                        buffer[0x1F1] = parseInt(modelId.substring(0, 2), 16);
+                                        buffer[0x1F2] = 0x11;
+                                        buffer[0x1F3] = 0x01;
                                         buffer[0x1F7] = emcsId;
                                         buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
                                         buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
@@ -127,10 +135,15 @@
                                         buffer[0x1F8] = 0;
                                         buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
 
-                                        buffer[0x1E0] = emcsId;
-                                        buffer[0x1E6] = buffer[0x1F6] & 0xFF;
-                                        buffer[0x1E5] = buffer[0x1F5] & 0xFF;
-                                        buffer[0x1E4] = buffer[0x1F4] & 0xFF;
+                                        buffer[0x1E0] = buffer[0x1F7];
+                                        buffer[0x1E1] = buffer[0x1F0] + 1;
+                                        buffer[0x1E2] = buffer[0x1F1];
+                                        buffer[0x1E3] = 0x20;
+
+                                        buffer[0x1E4] = 0xFF - buffer[0x1F4];
+                                        buffer[0x1E5] = 0xFF - buffer[0x1F5];
+                                        buffer[0x1E6] = 0xFF - buffer[0x1F6];
+                                        buffer[0x1E7] = 0x80; // for desrs something else
 
                                         buffer[0x1E8] = 0;
                                         buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
