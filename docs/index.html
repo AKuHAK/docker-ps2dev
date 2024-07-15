@@ -56,7 +56,7 @@
                         }, function (result) {
                             if (result && result.codeResult) {
                                 const barcode = result.codeResult.code;
-                                barcode = barcode.replace(/[^a-zA-Z0-9\s]/g, '');
+                                // barcode = barcode.replace(/[^a-zA-Z0-9\s]/g, '');
                                 const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
                                 const emcsId = parseInt(barcode.substring(0, 2), 10);
                                 const unknownId = parseInt(barcode.substring(2, 10), 10);
