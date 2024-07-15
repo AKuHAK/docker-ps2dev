@@ -57,9 +57,10 @@
                             if (result && result.codeResult) {
                                 let barcode = result.codeResult.code;
                                 barcode = barcode.replace(/[^a-zA-Z0-9\s]/g, '');
-                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
-                                const emcsId = parseInt(barcode.substring(0, 2), 10);
-                                const unknownId = parseInt(barcode.substring(2, 10), 10);
+                                let hexSerial, emcsId, unknownId;
+                                hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
+                                emcsId = parseInt(barcode.substring(0, 2), 10);
+                                unknownId = parseInt(barcode.substring(2, 10), 10);
                                 buffer[0x1F7] = emcsId;
                                 buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
                                 buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
