@@ -55,23 +55,21 @@
                             if (result && result.codeResult) {
                                 const barcode = result.codeResult.code;
                                 const emcsId = parseInt(barcode.substring(0, 2), 10);
-                                // const unknownId = parseInt(barcode.substring(2, 10), 10);
-                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');                                
+                                const unknownId = parseInt(barcode.substring(2, 10), 10);
+                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
                                 buffer[0x1F7] = emcsId;
                                 buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
                                 buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
                                 buffer[0x1F4] = parseInt(hexSerial.substring(4, 6), 16);
 
-                                const emcsId = barcode[0];
-                
                                 buffer[0x1F8] = 0;
                                 buffer[0x1F9] = 0xFF - ((buffer[0x1F0] + buffer[0x1F1] + buffer[0x1F2] + buffer[0x1F3] + buffer[0x1F4] + buffer[0x1F5] + buffer[0x1F6] + buffer[0x1F7]) & 0xFF);
-                
+
                                 buffer[0x1E0] = emcsId;
                                 buffer[0x1E6] = buffer[0x1F6] & 0xFF;
                                 buffer[0x1E5] = buffer[0x1F5] & 0xFF;
                                 buffer[0x1E4] = buffer[0x1F4] & 0xFF;
-                
+
                                 buffer[0x1E8] = 0;
                                 buffer[0x1E9] = 0xFF - ((buffer[0x1E0] + buffer[0x1E1] + buffer[0x1E2] + buffer[0x1E3] + buffer[0x1E4] + buffer[0x1E5] + buffer[0x1E6] + buffer[0x1E7]) & 0xFF);
 
