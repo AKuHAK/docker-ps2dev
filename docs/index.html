@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NVRAM Uploader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 </head>
+
 <body>
     <h1>NVRAM Uploader</h1>
     <form id="nvramForm">
@@ -21,7 +23,7 @@
     <a id="downloadLink" style="display:none">Download Modified NVRAM</a>
 
     <script>
-        document.getElementById('nvramForm').addEventListener('submit', function(event) {
+        document.getElementById('nvramForm').addEventListener('submit', function (event) {
             event.preventDefault();
             const fileInput = document.getElementById('nvramFile');
             const barcodeInput = document.getElementById('barcodeImage');
@@ -34,14 +36,14 @@
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 const buffer = new Uint8Array(e.target.result);
 
                 const barcodeReader = new FileReader();
-                barcodeReader.onload = function(event) {
+                barcodeReader.onload = function (event) {
                     const img = new Image();
                     img.src = event.target.result;
-                    img.onload = function() {
+                    img.onload = function () {
                         Quagga.decodeSingle({
                             src: img.src,
                             numOfWorkers: 0,
@@ -51,12 +53,13 @@
                             decoder: {
                                 readers: ["code_128_reader"] // List of active readers
                             },
-                        }, function(result) {
+                        }, function (result) {
                             if (result && result.codeResult) {
                                 const barcode = result.codeResult.code;
+                                barcode = barcode.replace(/[^a-zA-Z0-9\s]/g, '');
+                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
                                 const emcsId = parseInt(barcode.substring(0, 2), 10);
                                 const unknownId = parseInt(barcode.substring(2, 10), 10);
-                                const hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
                                 buffer[0x1F7] = emcsId;
                                 buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
                                 buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
@@ -76,7 +79,7 @@
                                 const modifiedBlob = new Blob([buffer], { type: 'application/octet-stream' });
                                 const downloadLink = document.getElementById('downloadLink');
                                 downloadLink.href = URL.createObjectURL(modifiedBlob);
-                                downloadLink.download = 'modified_nvram.bin';
+                                downloadLink.download = `nvm_${barcode}.bin`;
                                 downloadLink.style.display = 'block';
                                 downloadLink.textContent = 'Download Modified NVRAM';
                             } else {
@@ -91,4 +94,5 @@
         });
     </script>
 </body>
+
 </html>
