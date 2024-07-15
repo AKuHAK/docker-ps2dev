@@ -57,10 +57,25 @@
                             if (result && result.codeResult) {
                                 let barcode = result.codeResult.code;
                                 barcode = barcode.replace(/[^a-zA-Z0-9\s]/g, '');
-                                let hexSerial, emcsId, unknownId;
-                                hexSerial = parseInt(barcode.substring(10, 17)).toString(16).padStart(6, '0');
-                                emcsId = parseInt(barcode.substring(0, 2), 10);
-                                unknownId = parseInt(barcode.substring(2, 10), 10);
+                                let hexSerial, emcsId, unknownId, unknownId2;
+
+                                if (barcode.length === 17) {
+                                    hexSerial = parseInt(barcode.substring(10, 17), 10).toString(16).padStart(6, '0');
+                                    emcsId = parseInt(barcode.substring(0, 2), 10);
+                                    unknownId = parseInt(barcode.substring(2, 10), 10);
+                                    unknownId2 = 0;
+                                } else if (barcode.length === 11) {
+                                    hexSerial = parseInt(barcode.substring(3, 10)).toString(16).padStart(6, '0');
+                                    emcsId = 0;
+                                    unknownId = 0;
+                                    unknownId2 = barcode.substring(0, 3);
+                                } else {
+                                    alert('Invalid barcode length.');
+                                    return;
+                                }
+                                console.log('EMCS ID:', emcsId);
+                                console.log('Unknown ID:', unknownId);
+                                console.log('Hex Serial:', parseInt(hexSerial, 16));
                                 buffer[0x1F7] = emcsId;
                                 buffer[0x1F6] = parseInt(hexSerial.substring(0, 2), 16);
                                 buffer[0x1F5] = parseInt(hexSerial.substring(2, 4), 16);
